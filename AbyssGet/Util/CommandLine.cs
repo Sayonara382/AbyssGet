@@ -5,13 +5,13 @@ namespace AbyssGet.Util;
 
 public class CommandLine
 {
-    private static readonly Argument<IEnumerable<string>> VideoIdArguments = new("videoIds", "Video ID `K8R6OOjS7` or URL `https://abysscdn.com/?v=K8R6OOjS7`")
+    private static readonly Argument<IEnumerable<string>> VideoIdArguments = new("videoIds", "Video ID `K8R6OOjS7` or Player URL `https://abysscdn.com/?v=K8R6OOjS7`")
     {
         Arity = ArgumentArity.OneOrMore
     };
     
-    private static readonly Option FirstUrlOnlyOption = new Option<bool>(["--first-url-only", "-f"], () => false, "Use only the first URL");
-    private static readonly Option BestUrlPoolSizeOption = new Option<int>(["--best-url-pool-size", "-ps"], () => 3, "Size of the URL pool containing the N best performing URLs");
+    private static readonly Option FirstUrlOnlyOption = new Option<bool>(["--first-url-only", "-f"], () => false, "Only use the first CDN url");
+    private static readonly Option BestUrlPoolSizeOption = new Option<int>(["--best-url-pool-size", "-ps"], () => 3, "Size of the URL pool containing the best performing URLs");
     private static readonly Option MaxThreadsOption = new Option<int>(["--max-threads", "-t"], () => 16, "Maximum number of threads");
     private static readonly Option LogLevelOption = new Option<LogLevel>(["--log-level", "-l"], () => LogLevel.Information, "Log level");
     private static readonly Option RequestTimeoutOption = new Option<int>(["--request-timeout", "-rt"], () => 120, "Request timeout in seconds");
