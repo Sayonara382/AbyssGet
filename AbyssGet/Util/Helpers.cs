@@ -35,7 +35,7 @@ public static class Helpers
         
         var jsCode = scriptMatches.Select(m => m.Groups[1].Value).OrderByDescending(t => t.Length).First();
 
-        var payloadRegex = new Regex(@"((\()?(?<name>\w+)\(0x\w+\)(\+)?){30,}('_')?\)");
+        var payloadRegex = new Regex(@"((\()?(?<name>\w+)\(0x\w+\)(\+)?){30,}('_')?\)?");
         var payloadMatch = payloadRegex.Match(jsCode);
         
         var shiftRegex = new Regex($@"\(\){{(var {payloadMatch.Groups["name"]}=\w)");
