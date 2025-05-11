@@ -48,8 +48,6 @@ public static class Helpers
             @"var \w=\(function\(\)\{.*?\}\(\)\),(?<c>\w)=.*?;\}\);"
         };
 
-        // not working: RcyCb25dh, working: K8R6OOjS7
-        
         for (var i = 0; i < unusedFunctions.Count; i++)
         {
             var filterRegex = new Regex(unusedFunctions[i]);
@@ -68,7 +66,6 @@ public static class Helpers
         engine.Execute("var window = {};");
         engine.Execute(jsCode);
         engine.Execute(shiftText);
-        Console.WriteLine(payloadMatch);
         engine.Execute($"var payload = {payloadMatch};");
         
         return engine.GetValue("payload").AsString();
