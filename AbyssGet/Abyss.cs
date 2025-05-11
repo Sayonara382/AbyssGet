@@ -281,10 +281,7 @@ public class Abyss
             
             foreach (var video in videos)
             {
-                var task = ctx.AddTask($"{video.Slug!} | {video.Label, 5}", new ProgressTaskSettings
-                {
-                    AutoStart = false
-                });
+                var task = ctx.AddTask($"{video.Slug!} | {video.Label, 5}", new ProgressTaskSettings { AutoStart = false });
                 task.MaxValue = video.Size;
                 
                 tasks.Add((task, video));
