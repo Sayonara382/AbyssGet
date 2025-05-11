@@ -35,9 +35,9 @@ public static class Helpers
         
         var jsCode = scriptMatches.Select(m => m.Groups[1].Value).OrderByDescending(t => t.Length).First();
 
-        var payloadRegex = new Regex(@"((\()?(?<name>\w+)\(0x\w+\)(\+)?){99,}.*?\)");
+        var payloadRegex = new Regex(@"((\()?(?<name>\w+)\(0x\w+\)(\+)?){30,}");
         var payloadMatch = payloadRegex.Match(jsCode);
-
+        
         var shiftRegex = new Regex($@"\(\){{(var {payloadMatch.Groups["name"]}=\w)");
         var shiftText = shiftRegex.Match(jsCode).Groups[1] + ";";
 
@@ -48,6 +48,8 @@ public static class Helpers
             @"var \w=\(function\(\)\{.*?\}\(\)\),(?<c>\w)=.*?;\}\);"
         };
 
+        // not working: RcyCb25dh, working: K8R6OOjS7
+        
         for (var i = 0; i < unusedFunctions.Count; i++)
         {
             var filterRegex = new Regex(unusedFunctions[i]);
@@ -66,6 +68,7 @@ public static class Helpers
         engine.Execute("var window = {};");
         engine.Execute(jsCode);
         engine.Execute(shiftText);
+        Console.WriteLine(payloadMatch);
         engine.Execute($"var payload = {payloadMatch};");
         
         return engine.GetValue("payload").AsString();
