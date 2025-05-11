@@ -19,7 +19,7 @@ jobs:
         run: dotnet restore
 
       - name: Install dependencies
-        run: apt-get install -y libicu-dev libcurl4-openssl-dev zlib1g-dev libkrb5-dev
+        run: sudo apt-get install -y libicu-dev libcurl4-openssl-dev zlib1g-dev libkrb5-dev
 
       - name: Publish
         run: dotnet publish -r linux-x64 -c Release
