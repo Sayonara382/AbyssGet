@@ -4,7 +4,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-win-x64:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+          
+      - name: Publish
+        run: dotnet publish -r win-x64 -c Release -o win-x64
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-x64
+          path: win-x64/
+
+  build-linux-x64:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,9 +35,6 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
-
       - name: Install dependencies
         run: sudo apt-get install -y libicu-dev libcurl4-openssl-dev zlib1g-dev libkrb5-dev
 
@@ -27,5 +44,5 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: console-app
+          name: linux-x64
           path: linux-x64/
