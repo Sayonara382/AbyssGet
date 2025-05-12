@@ -136,7 +136,8 @@ public class Abyss
                     continue;
                 }
 
-                var filePath = Path.Combine(downloadDir, $"{payload.Start}.bin");
+                var fragmentNumber = payload.Start / StepSize;
+                var filePath = Path.Combine(downloadDir, $"{fragmentNumber}.bin");
                 await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
                 await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
@@ -250,8 +251,8 @@ public class Abyss
         var fileName = $"{video.Slug!}_{video.Label}.mp4";
         Helpers.MergeFiles(_settings.OutputDirectory, tempDir, fileName);
         
-        if (Directory.Exists(downloadDir))
-            Directory.Delete(downloadDir, recursive: true);
+        //if (Directory.Exists(downloadDir))
+        //    Directory.Delete(downloadDir, recursive: true);
         
         _logger.LogInfo($"Done, saved as {fileName}", video);
     }
