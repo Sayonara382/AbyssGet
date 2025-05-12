@@ -251,8 +251,8 @@ public class Abyss
         var fileName = $"{video.Slug!}_{video.Label}.mp4";
         Helpers.MergeFiles(_settings.OutputDirectory, tempDir, fileName);
         
-        //if (Directory.Exists(downloadDir))
-        //    Directory.Delete(downloadDir, recursive: true);
+        if (Directory.Exists(downloadDir))
+            Directory.Delete(downloadDir, recursive: true);
         
         _logger.LogInfo($"Done, saved as {fileName}", video);
     }
