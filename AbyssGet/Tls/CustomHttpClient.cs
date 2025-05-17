@@ -62,7 +62,8 @@ public class CustomHttpClient(string host, int port = 443) : IDisposable
         }
 
         stringReader.ReadLine(); // remove random number preceding content 
-        httpResponse.Content = new StringContent(stringReader.ReadToEnd()[..^7]); // remove random number (0) following content 
+        var content = stringReader.ReadToEnd();
+        httpResponse.Content = new StringContent(content.Length > 7 ? content[..^7] : content); // remove random number (0) following content 
 
         return httpResponse;
     }

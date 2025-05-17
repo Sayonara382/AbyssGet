@@ -314,7 +314,16 @@ public class Abyss
         foreach (var videoId in videoIds)
         {
             _logger.LogInfo($"Requesting payload for video {videoId}...");
-            var payload = await Helpers.RequestPayload(videoId);
+            string payload;
+            try
+            {
+                payload = await Helpers.RequestPayload(videoId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Unable to request payload: {ex.Message}");
+                return;
+            }
             _logger.LogDebug($"{videoId} -> {payload}");
             payloadList.Add(payload);
         }
