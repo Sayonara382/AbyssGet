@@ -19,6 +19,12 @@ public static class Helpers
     };
     private static readonly JsonContext Context = new(Options);
 
+    private static string Atob(string input)
+    {
+        var bytes = Convert.FromBase64String(input);
+        return Encoding.UTF8.GetString(bytes);
+    }
+    
     public static async Task<string> RequestPayload(string videoId)
     {
         var httpClient = new CustomHttpClient("abysscdn.com");
@@ -33,61 +39,23 @@ public static class Helpers
 
         var scriptRegex = new Regex("<script>(.*?)</script>");
         var scriptMatches = scriptRegex.Matches(htmlCode);
-        
+
         var jsCode = scriptMatches.Select(m => m.Groups[1].Value).OrderByDescending(t => t.Length).First();
 
-        var payloadRegex = new Regex(@"((\()?(?<name>\w+)\(0x\w+\)(\+)?){30,}('_')?\)?");
-        var payloadMatch = payloadRegex.Match(jsCode);
-        
-        var shiftRegex = new Regex($@"\(\){{(var {payloadMatch.Groups["name"]}=\w)");
-        var shiftText = shiftRegex.Match(jsCode).Groups[1] + ";";
-
-        var unusedFunctions = new List<string>
-        {
-            @"\w\(\w\(0x[0-9a-fA-F]+\),\(\)=>\{.*}\);",
-            $@"function \w\(\)\{{var {payloadMatch.Groups["name"]}(.*?)decodeURIComponent(.*?)\}}\}}",
-            @"var \w=\(function\(\)\{.*?\}\(\)\),(?<c>\w)=.*?;\}\);"
-        };
-
-        for (var i = 0; i < unusedFunctions.Count; i++)
-        {
-            var filterRegex = new Regex(unusedFunctions[i]);
-            var functionCode = filterRegex.Match(jsCode);
-            jsCode = jsCode.Replace(functionCode.Value, "");
-            
-            var functionCall = functionCode.Groups["c"].ToString();
-            if (!string.IsNullOrEmpty(functionCall))
-            {
-                unusedFunctions.Add($@"{functionCall}\(\);");
-            }
-        }
-
         var engine = new Engine();
+        engine.SetValue("atob", Atob); // doesn't break when compiling AOT
         
-        engine.Execute("var window = {};");
+        engine.Execute("function decodeCustomBase64(input){const defaultCharacterSet=\"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\";const customCharacterSet=\"RB0fpH8ZEyVLkv7c2i6MAJ5u3IKFDxlS1NTsnGaqmXYdUrtzjwObCgQP94hoeW+/=\";let standardBase64=\"\";for(const ch of input){const index=customCharacterSet.indexOf(ch);if(index!==-1){standardBase64+=defaultCharacterSet[index]}}const decodedBytes=atob(standardBase64);try{return decodeURIComponent(escape(decodedBytes))}catch{return decodedBytes}}");
+        engine.Execute("var window = {addEventListener: function(name, func){func()}, atob: decodeCustomBase64};");
+        engine.Execute("var top = {location: '.'}; var self = {};");
+        engine.Execute("var getParameterByName = function(){return false;};");
+        engine.Execute("var document = {getElementById: function(){return false;}};");
+        engine.Execute("var isUseExtension = false;");
+        engine.Execute("var output = \"NO_RETURN\";");
+        engine.Execute("window.SoTrym = function(name) {return {setup: function(config) {output = JSON.stringify(config);return this;}};};");
         engine.Execute(jsCode);
-        engine.Execute(shiftText);
-        engine.Execute($"var payload = {payloadMatch};");
         
-        return engine.GetValue("payload").AsString();
-    }
-
-    public static string DecodeCustomBase64(string input)
-    {
-        const string defaultCharacterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-        const string customCharacterSet = "RB0fpH8ZEyVLkv7c2i6MAJ5u3IKFDxlS1NTsnGaqmXYdUrtzjwObCgQP94hoeW+/=";
-
-        var builder = new StringBuilder(input.Length);
-
-        foreach (var ch in input)
-        {
-            var index = customCharacterSet.IndexOf(ch);
-            if (index != -1)
-                builder.Append(defaultCharacterSet[index]);
-        }
-
-        var decodedBytes = Convert.FromBase64String(builder.ToString());
-        return Encoding.UTF8.GetString(decodedBytes);
+        return engine.GetValue("output").AsString();
     }
 
     public static void MergeFiles(string baseDir, string tempDir, string fileName)
@@ -117,8 +85,7 @@ public static class Helpers
 
     public static List<Video> ExtractVideos(string payload)
     {
-        var decodedPayload = DecodeCustomBase64(payload);
-        var jsonPayload = JsonSerializer.Deserialize(decodedPayload, Context.MetadataPayload)!;
+        var jsonPayload = JsonSerializer.Deserialize(payload, Context.MetadataPayload)!;
    
         return Enumerable.Select<MetadataSource, Video>(jsonPayload.Sources, source => new Video
             {

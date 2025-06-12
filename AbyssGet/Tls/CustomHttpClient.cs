@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Net;
+using System.Text;
 
 namespace AbyssGet.Tls;
 
@@ -61,9 +63,16 @@ public class CustomHttpClient(string host, int port = 443) : IDisposable
                 httpResponse.Headers.TryAddWithoutValidation(headerParts[0].Trim(), headerParts[1].Trim());
         }
 
-        stringReader.ReadLine(); // remove random number preceding content 
-        var content = stringReader.ReadToEnd();
-        httpResponse.Content = new StringContent(content.Length > 7 ? content[..^7] : content); // remove random number (0) following content 
+        var sb = new StringBuilder();
+        
+        while (stringReader.ReadLine() is var line && !string.IsNullOrEmpty(line) && int.Parse(line, NumberStyles.HexNumber) is var length && length > 0)
+        {
+            var buf = new char[length + 2];
+            stringReader.Read(buf, 0, length + 2);
+            sb.Append(buf[..^2]);
+        }
+
+        httpResponse.Content = new StringContent(sb.ToString());
 
         return httpResponse;
     }
