@@ -18,7 +18,9 @@ Options:
   -bt, --block-timeout <block-timeout>               Block timeout in seconds [default: 60]
   -rr, --request-retries <request-retries>           Number of request retries [default: 3]
   -p, --download-in-parallel                         Download videos in parallel [default: False]
-  -o, --output-directory <output-directory>          Output directory [default: .]
+  -s, --save-dir <save-dir>                         Directory to save downloaded files [default: .]
+  -n, --save-name <save-name>                       Custom name for the downloaded file (without extension) [default: ""]
+  -a, --auto-select                                 Automatically select the best quality to download [default: False]
   --version                                          Show version information
   -?, -h, --help                                     Show help and usage information
 ```

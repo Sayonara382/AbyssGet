@@ -17,6 +17,8 @@ public class Settings
     public int RequestRetries { get; set; } = 3;
     public bool DownloadInParallel { get; set; } = false;
     public string OutputDirectory { get; set; } = ".";
+    public string SaveName { get; set; } = "";
+    public bool AutoSelect { get; set; } = false;
 }
 
 public class Video

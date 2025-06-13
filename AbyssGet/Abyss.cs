@@ -248,7 +248,9 @@ public class Abyss
         }
         
         _logger.LogInfo("Merging fragments", video);
-        var fileName = $"{video.Slug!}_{video.Label}.mp4";
+        var fileName = string.IsNullOrEmpty(_settings.SaveName) 
+            ? $"{video.Slug!}_{video.Label}.mp4"
+            : $"{_settings.SaveName}.mp4";
         Helpers.MergeFiles(_settings.OutputDirectory, tempDir, fileName);
         
         if (Directory.Exists(downloadDir))
@@ -331,23 +333,36 @@ public class Abyss
         var count = payloadList.Count;
         _logger.LogInfo($"Getting videos for {count} payload{(count == 1 ? "" : "s")}...");
         var videoList = Helpers.ExtractVideos(payloadList);
-        
-        var prompt = new MultiSelectionPrompt<Video>()
-            .UseConverter(video =>
-                (video.Label == "PARENT"
-                    ? $"| {video.Slug!} | {video.Id} |"
-                    : $"| {video.Label!, 5} | {video.Codec, 4} | {video.Type} | {(int)(video.Size / (1024.0 * 1024.0)), 4} MB")
-                .EscapeMarkup())
-            .Required()
-            .PageSize(10);
-        
-        foreach (var videos in videoList)
+
+        List<Video> selectedVideos;
+        if (_settings.AutoSelect)
         {
-            var first = videos.First();
-            prompt.AddChoiceGroup(new Video { Label = "PARENT", Slug = first.Slug, Id = first.Id }, videos);
+            selectedVideos = videoList.Select(videos => videos.First()).ToList();
+            foreach (var video in selectedVideos)
+            {
+                _logger.LogInfo($"Auto-selected quality {video.Label} for {video.Slug}");
+            }
+        }
+        else
+        {
+            var prompt = new MultiSelectionPrompt<Video>()
+                .UseConverter(video =>
+                    (video.Label == "PARENT"
+                        ? $"| {video.Slug!} | {video.Id} |"
+                        : $"| {video.Label!, 5} | {video.Codec, 4} | {video.Type} | {(int)(video.Size / (1024.0 * 1024.0)), 4} MB")
+                    .EscapeMarkup())
+                .Required()
+                .PageSize(10);
+            
+            foreach (var videos in videoList)
+            {
+                var first = videos.First();
+                prompt.AddChoiceGroup(new Video { Label = "PARENT", Slug = first.Slug, Id = first.Id }, videos);
+            }
+            
+            selectedVideos = AnsiConsole.Prompt(prompt);
         }
         
-        var selectedVideos = AnsiConsole.Prompt(prompt);
         await DownloadVideos(selectedVideos);
     }
 }

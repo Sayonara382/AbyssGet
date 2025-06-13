@@ -18,13 +18,15 @@ public class CommandLine
     private static readonly Option BlockTimeoutOption = new Option<int>(["--block-timeout", "-bt"], () => 60, "Block timeout in seconds");
     private static readonly Option RequestRetriesOption = new Option<int>(["--request-retries", "-rr"], () => 3, "Number of request retries");
     private static readonly Option DownloadInParallelOption = new Option<bool>(["--download-in-parallel", "-p"], () => false, "Download videos in parallel");
-    private static readonly Option OutputDirectoryOption = new Option<string>(["--output-directory", "-o"], () => ".", "Output directory");
+    private static readonly Option SaveDirOption = new Option<string>(["--save-dir", "-s"], () => ".", "Directory to save downloaded files");
+    private static readonly Option SaveNameOption = new Option<string>(["--save-name", "-n"], () => "", "Custom name for the downloaded file (without extension)");
+    private static readonly Option AutoSelectOption = new Option<bool>(["--auto-select", "-a"], () => false, "Automatically select the best quality to download");
     
     public static Command GetRootCommand()
     {
         var rootCommand = new RootCommand("Download one or more videos from abyss.to by either their Video ID or Player URL.")
         {
-            Handler = CommandHandler.Create<IEnumerable<string>, bool, int, int, LogLevel, int, int, int, bool, string>(HandleCommandAsync)
+            Handler = CommandHandler.Create<IEnumerable<string>, bool, int, int, LogLevel, int, int, int, bool, string, string, bool>(HandleCommandAsync)
         };
 
         rootCommand.AddArgument(VideoIdArguments);
@@ -37,12 +39,14 @@ public class CommandLine
         rootCommand.AddOption(BlockTimeoutOption);
         rootCommand.AddOption(RequestRetriesOption);
         rootCommand.AddOption(DownloadInParallelOption);
-        rootCommand.AddOption(OutputDirectoryOption);
+        rootCommand.AddOption(SaveDirOption);
+        rootCommand.AddOption(SaveNameOption);
+        rootCommand.AddOption(AutoSelectOption);
         
         return rootCommand;
     }
     
-    private static async Task HandleCommandAsync(IEnumerable<string> videoIds, bool firstUrlOnly, int bestUrlPoolSize, int maxThreads, LogLevel logLevel, int requestTimeout, int blockTimeout, int requestRetries, bool downloadInParallel, string outputDirectory) 
+    private static async Task HandleCommandAsync(IEnumerable<string> videoIds, bool firstUrlOnly, int bestUrlPoolSize, int maxThreads, LogLevel logLevel, int requestTimeout, int blockTimeout, int requestRetries, bool downloadInParallel, string saveDir, string saveName, bool autoSelect) 
     {
         var settings = new Settings
         {
@@ -54,7 +58,9 @@ public class CommandLine
             BlockTimeout = TimeSpan.FromSeconds(blockTimeout),
             RequestRetries = requestRetries,
             DownloadInParallel = downloadInParallel,
-            OutputDirectory = outputDirectory
+            OutputDirectory = saveDir,
+            SaveName = saveName,
+            AutoSelect = autoSelect
         };
 
         var abyss = new Abyss(settings);
