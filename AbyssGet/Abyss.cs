@@ -324,7 +324,6 @@ public class Abyss
             catch (Exception ex)
             {
                 _logger.LogError($"Unable to request payload: {ex.Message}");
-                _logger.LogError($"Stack trace: {ex.StackTrace}");
                 return;
             }
             _logger.LogDebug($"{videoId} -> {payload}");
