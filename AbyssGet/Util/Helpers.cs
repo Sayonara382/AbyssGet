@@ -28,13 +28,13 @@ public static class Helpers
     {
         var httpClient = new CustomHttpClient("abysscdn.com");
         var targetUrl = videoId.StartsWith("http") ? videoId : $"https://abysscdn.com/?v={videoId}";
-        var proxyUrl = $"https://gg.nettruyen3q.com/api/proxy?url={Uri.EscapeDataString(targetUrl)}";
-        var request = new HttpRequestMessage(HttpMethod.Get, proxyUrl);
+        var request = new HttpRequestMessage(HttpMethod.Get, targetUrl);
         Console.WriteLine(request.RequestUri?.ToString() ?? "No request URI");
 
         request.Headers.ConnectionClose = true;
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
         var response = await httpClient.SendAsync(request, TimeSpan.FromSeconds(30));
+        Console.WriteLine(await response.Content.ReadAsStringAsync());
         response.EnsureSuccessStatusCode();
 
         var htmlCode = await response.Content.ReadAsStringAsync();
