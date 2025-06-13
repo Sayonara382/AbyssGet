@@ -27,9 +27,10 @@ public static class Helpers
     public static async Task<string> RequestPayload(string videoId)
     {
         var httpClient = new CustomHttpClient("abysscdn.com");
-        var request = new HttpRequestMessage(HttpMethod.Get, videoId.StartsWith("http") ? videoId : $"https://abysscdn.com/?v={videoId}");
-        
-        Logger.LogInfo(request.RequestUri?.ToString() ?? "No request URI");
+        var targetUrl = videoId.StartsWith("http") ? videoId : $"https://abysscdn.com/?v={videoId}";
+        var proxyUrl = $"https://gg.nettruyen3q.com/api/proxy?url={Uri.EscapeDataString(targetUrl)}";
+        var request = new HttpRequestMessage(HttpMethod.Get, proxyUrl);
+        Console.WriteLine(request.RequestUri?.ToString() ?? "No request URI");
 
         request.Headers.ConnectionClose = true;
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
