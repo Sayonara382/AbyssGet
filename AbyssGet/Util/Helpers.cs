@@ -26,7 +26,7 @@ public static class Helpers
     
     public static async Task<string> RequestPayload(string videoId)
     {
-        var httpClient = new CustomHttpClient("abysscdn.com");
+        var httpClient = new CustomHttpClient("gg.nettruyen3q.com");
         var targetUrl = videoId.StartsWith("http") ? videoId : $"https://abysscdn.com/?v={videoId}";
         var proxyUrl = $"https://gg.nettruyen3q.com/api/hydrax?url={Uri.EscapeDataString(targetUrl)}";
         var request = new HttpRequestMessage(HttpMethod.Get, proxyUrl);
@@ -37,21 +37,9 @@ public static class Helpers
         response.EnsureSuccessStatusCode();
 
         var htmlCode = await response.Content.ReadAsStringAsync();
-        
-        // Check if response is HTML instead of expected format
-        if (htmlCode.TrimStart().StartsWith("<html", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new Exception($"Proxy server returned HTML instead of expected response. This could mean the video is no longer available or the proxy server is not working. Video ID: {videoId}");
-        }
 
         var scriptRegex = new Regex("<script>(.*?)</script>");
         var scriptMatches = scriptRegex.Matches(htmlCode);
-
-        if (scriptMatches.Count == 0)
-        {
-            throw new Exception($"No script tags found in response. This could mean the video is no longer available or the proxy server is not working. Video ID: {videoId}");
-        }
-
         var jsCode = scriptMatches.Select(m => m.Groups[1].Value).OrderByDescending(t => t.Length).First();
 
         var engine = new Engine();
