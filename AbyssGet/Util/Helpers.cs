@@ -43,9 +43,8 @@ public static class Helpers
         var jsCode = scriptMatches.Select(m => m.Groups[1].Value).OrderByDescending(t => t.Length).First();
 
         var engine = new Engine();
-        engine.SetValue("atob", Atob); // doesn't break when compiling AOT
-        
-       engine.Execute(@"
+        engine.SetValue("atob", Atob);
+        engine.Execute(@"
         function decodeCustomBase64(input) {
           const defaultCharacterSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
           const customCharacterSet = 'RB0fpH8ZEyVLkv7c2i6MAJ5u3IKFDxlS1NTsnGaqmXYdUrtzjwObCgQP94hoeW+/=';
@@ -71,12 +70,32 @@ public static class Helpers
         engine.Execute("var top = {location: '.'}; var self = {};");
         engine.Execute("var getParameterByName = function(){return false;};");
         engine.Execute(@"
+            var __dom = {};
+
             function HTMLElement() {
               this._innerHTML = '';
+              this._innerText = '';
+              this.id = undefined;
             }
+
             HTMLElement.prototype.setAttribute = function() { return 'function'; };
             HTMLElement.prototype.appendChild = function() { return 'function'; };
-            HTMLElement.prototype.style = undefined;
+            HTMLElement.prototype.remove = function() {
+              if (this.id && __dom[this.id]) {
+                delete __dom[this.id];
+              }
+            };
+            HTMLElement.prototype.style = {display: ''};
+
+            Object.defineProperty(HTMLElement.prototype, 'innerText', {
+              get: function() {
+                return this._innerText;
+              },
+              set: function(value) {
+                this._innerText = value;
+              },
+              configurable: true
+            });
 
             Object.defineProperty(HTMLElement.prototype, 'innerHTML', {
               get: function() {
@@ -95,18 +114,31 @@ public static class Helpers
               configurable: true
             });
 
+            function Document() {}
             var document = {
               createElement: function() {
                 return new HTMLElement();
               },
               getElementById: function(id) {
-                return id === 'overlay' ? false : true;
+                return __dom[id] || null;
+              },
+              body: {
+                appendChild: function(el) {
+                  if (el.id) {
+                    __dom[el.id] = el;
+                  }
+                }
               },
               toString: function() {
-                return '[objectHTMLDocument]';
+                return '[object HTMLDocument]';
+              },
+              querySelector: function() {
+                return true;
               }
             };
+            Object.setPrototypeOf(document, Document.prototype);
         ");
+        engine.Execute("document.body.appendChild({id: 'player', innerText: '', innerHTML: '', style: ''});");
         engine.Execute("var isUseExtension = false;");
         engine.Execute("var output = 'NO_RETURN';");
         engine.Execute(@"
@@ -120,7 +152,7 @@ public static class Helpers
         };        
         ");
         engine.Execute(jsCode);
-        
+
         return engine.GetValue("output").AsString();
     }
 
